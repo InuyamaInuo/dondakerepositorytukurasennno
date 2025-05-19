@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>冷蔵庫リスト</title>
+</head>
+
+<body>
+	<table>
+		<tr>
+			<th>名前</th>
+			<th>量</th>
+			<th>カテゴリ</th>
+			<th>購入日</th>
+			<th>賞味期限</th>
+		</tr>
+		<tr th:each="item : ${items}">
+			<td th:text="${item.name}"></td>
+			<td th:text="${item.quantity}"></td>
+			<td th:text="${item.category}"></td>
+			<td th:text="${item.purchaseDate}"></td>
+			<td th:style="${#dates.daysBetween(item.purchaseDate.plusDays(賞味期限日数), T(java.time.LocalDate).now()) > -3} ? 'color:red'"
+				th:text="${item.purchaseDate.plusDays(賞味期限日数)}"></td>
+		</tr>
+	</table>
+
+</body>
+
+</html>
