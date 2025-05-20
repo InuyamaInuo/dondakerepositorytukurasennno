@@ -1,10 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+	<title>食材追加フォーム</title>
 </head>
+
 <body>
+	<h1>食材を追加</h1>
+
+	<form th:action="@{/fridge/save}" th:object="${foodItem}" method="post">
+		<label>食材名：</label>
+		<input type="text" th:field="*{name}" required /><br />
+
+		<label>カテゴリー：</label>
+		<select th:field="*{category}" id="category" onchange="updateCategoryAndUnit()">
+			<option value="生肉、生魚">生肉、生魚</option>
+			<option value="野菜">野菜</option>
+			<option value="加工品">加工品(豆腐、納豆とか)</option>
+			<option value="卵">卵</option>
+			<option value="その他">その他(自由入力できます)
+			</option>
+		</select><br />
+
+		<!-- その他カテゴリの入力欄（最初は非表示） -->
+		<div id="otherCategoryFields" style="display: none; margin-top: 10px;">
+			<label>カテゴリ名:</label>
+			<input type="text" name="customCategory" /><br />
+			<label>賞味期限までの日数:</label>
+			<input type="number" name="customDaysToExpire" min="0" /><br />
+		</div>
+
+		<label>量：</label>
+		<input type="number" th:field="*{quantity}" id="quantityInput" required min="0"/>
+		<span id="unit">g</span><br />
+
+		<label>購入日：</label>
+		<input type="date" th:field="*{purchaseDate}"th:value="${#temporals.format(foodItem.purchaseDate, 'yyyy-MM-dd')}" /><br />
+
+		<label>冷凍：</label>
+		<input type="checkbox" th:field="*{frozen}" /><br />
+
+		<button type="submit">登録</button>
+	</form>
+
+	<script>
+		function updateCategoryAndUnit() {
+			const category = document.getElementById("category").value;
+			const unit = document.getElementById("unit");
+			const otherFields = document.getElementById("otherCategoryFields");
+
+			// 単位の更新
+			if (category === "生肉、生魚" || category === "野菜") {
+				unit.textContent = "g";
+			} else {
+				unit.textContent = "個";
+			}
+
+			// 「その他」が選ばれたら自由入力欄を表示
+			if (category === "その他") {
+				otherFields.style.display = "block";
+			} else {
+				otherFields.style.display = "none";
+			}
+		}
+
+		// ページ読み込み時にもチェック
+		window.onload = updateCategoryAndUnit;
+	</script>
 
 </body>
+
 </html>
