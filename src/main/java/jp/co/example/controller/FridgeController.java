@@ -1,6 +1,7 @@
 package jp.co.example.controller;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,7 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jp.co.example.entity.FoodHistory;
 import jp.co.example.entity.FoodItem;
+import jp.co.example.repository.FoodHistoryRepository;
 import jp.co.example.repository.FoodItemRepository;
 import jp.co.example.service.Shomikigen;
 
@@ -25,6 +28,8 @@ public class FridgeController {
 
 	@Autowired
 	FoodItemRepository fir;
+	@Autowired
+	private FoodHistoryRepository foodHistoryRepository;
 
 	//リストを表示する
 	@GetMapping("/list")
@@ -56,10 +61,18 @@ public class FridgeController {
 		fir.save(foodItem);
 		redirectAttributes.addFlashAttribute("addedmessage", "「" + foodItem.getName() + "」を登録しました！");
 
-		//デバッグ用ログ残し
-		FoodItem saved = fir.save(foodItem);
-		System.out.println("保存された内容: " + saved.getName() + " / " + saved.getExpirationDate());
+		// 履歴に追加（同じ名前の重複を避けるには工夫してもOK）
+		FoodHistory history = new FoodHistory();
+		history.setFoodName(foodItem.getName());
+		history.setAddedAt(LocalDateTime.now());
+		foodHistoryRepository.save(history);
 
+		// 最大50件を超えたら古いものから削除
+		List<FoodHistory> all = foodHistoryRepository.findAllByOrderByAddedAtDesc();
+		if (all.size() > 50) {
+			foodHistoryRepository.deleteAll(all.subList(50, all.size()));
+		}
+		
 		return "redirect:/fridge/list";
 	}
 

@@ -3,6 +3,7 @@
 
 <head>
 	<meta charset="UTF-8">
+	<link rel="stylesheet" type="text/css" href="listdesign.css" /> 
 	<title>冷蔵庫リスト</title>
 </head>
 
@@ -32,13 +33,13 @@
 				<td th:text="${item.category}"></td>
 				<td th:text="${item.purchaseDate}"></td>
 				<!-- 賞味期限が今日まで -->
-				<td th:if="${item.daysUntilExpiration == 0}" th:text="'今日まで！'">
+				<td th:if="${item.daysUntilExpiration == 0}" th:text="'今日まで！'" style="color: coral;">
 				</td>
 				<!-- 賞味期限が切れていないとき -->
 				<td th:if="${item.daysUntilExpiration > 0}" th:text="'あと' + ${item.daysUntilExpiration} + '日'">
 				</td>
 				<!-- 賞味期限が切れているとき -->
-				<td th:if="${item.daysUntilExpiration < 0}" th:text="'切れています'">
+				<td th:if="${item.daysUntilExpiration < 0}" th:text="'切れています'" style="color: red;">
 					<!-- 「冷凍」の項目は冷凍してるときだけ表示 -->
 				<td th:if="${item.frozen == true}" th:text="'冷凍済み'">
 				</td>
