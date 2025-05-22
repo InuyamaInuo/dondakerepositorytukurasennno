@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>献立を追加</title>
+	<script>
+		function addItemRow() {
+			const container = document.getElementById('itemsContainer');
+			const index = container.children.length;
+
+			const row = document.createElement('div');
+			row.innerHTML = `
+				<label>食材名：</label>
+				<input type="text" name="items[${index}].foodName" required />
+				<label>量：</label>
+				<input type="number" name="items[${index}].requiredQuantity" required min="0" />
+				<br />
+			`;
+			container.appendChild(row);
+		}
+	</script>
+</head>
+
+<body>
+	<h1>献立を追加</h1>
+	<form th:action="@{/recipes/save}" th:object="${recipe}" method="post" onsubmit="return validateForm()">
+		<label>献立名：</label>
+		<input type="text" th:field="*{recipeName}" required /><br />
+
+		<div id="itemsContainer">
+			<!-- 初期入力欄 -->
+			<div class="item-row">
+				<label>食材名：</label>
+				<input type="text" name="items[0].foodName" required />
+				<label>量：</label>
+				<input type="number" name="items[0].requiredQuantity" required min="0" />
+				<button type="button" onclick="removeItemRow(this)">削除</button>
+				<br />
+			</div>
+		</div>
+
+		<button type="button" onclick="addItemRow()">＋ 食材を追加</button>
+
+		<h3>食材履歴から追加</h3>
+		<button type="button" onclick="addSelectedHistoryItems()">選択した食材を追加</button>
+
+		<table border="1">
+			<thead>
+				<tr>
+					<th>選択</th>
+					<th>食材名</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr th:each="hist : ${historyList}">
+					<td><input type="checkbox" name="historyCheckbox" th:value="${hist.foodName}" /></td>
+					<td th:text="${hist.foodName}"></td>
+				</tr>
+			</tbody>
+		</table>
+		</div>
+		<br><br>
+		<button type="submit">登録</button>
+	</form>
+
+	<br><br>
+	<a th:href="@{list}">←一覧に戻る</a>
+</body>
+
+<script>
+	let itemIndex = 1;
+
+	//「削除」ボタンを押すとフォームが消える
+	function removeItemRow(button) {
+		const row = button.closest(".item-row");
+		row.remove();
+		updateItemIndexes();
+	}
+
+	//「食材を追加」ボタンを押すとフォームが増える
+	function addItemRow() {
+		const container = document.getElementById('itemsContainer');
+		const index = container.querySelectorAll('.item-row').length;
+
+		const row = document.createElement('div');
+		row.classList.add('item-row');
+		row.innerHTML = `
+		<label>食材名：</label>
+		<input type="text" name="items[${index}].foodName" required />
+		<label>量：</label>
+		<input type="number" name="items[${index}].requiredQuantity" required min="0" />
+		<button type="button" onclick="removeItemRow(this)">削除</button>
+		<br />
+	`;
+		container.appendChild(row);
+	}
+
+
+	//チェックボックスで選んだ食材をリストに追加
+	function addSelectedHistoryItems() {
+		const container = document.getElementById('itemsContainer');
+		const checkboxes = document.querySelectorAll('input[name="historyCheckbox"]:checked');
+
+		checkboxes.forEach((checkbox) => {
+			const index = container.querySelectorAll('.item-row').length;
+
+			const row = document.createElement('div');
+			row.classList.add('item-row');
+			row.innerHTML = `
+			<label>食材名：</label>
+			<input type="text" name="items[${index}].foodName" value="${checkbox.value}" required />
+			<label>量：</label>
+			<input type="number" name="items[${index}].requiredQuantity" value="1" required min="0" />
+			<button type="button" onclick="removeItemRow(this)">削除</button>
+			<br />
+		`;
+			container.appendChild(row);
+		});
+
+		checkboxes.forEach(cb => cb.checked = false);
+	}
+
+	//食材を削除・追加するたびに行インデックスを再計算
+	function updateItemIndexes() {
+		const rows = document.querySelectorAll('.item-row');
+		rows.forEach((row, index) => {
+			const foodInput = row.querySelector('input[name$=".foodName"]');
+			const qtyInput = row.querySelector('input[name$=".requiredQuantity"]');
+
+			if (foodInput) {
+				foodInput.name = `items[${index}].foodName`;
+			}
+			if (qtyInput) {
+				qtyInput.name = `items[${index}].requiredQuantity`;
+			}
+		});
+	}
+
+	// エラーメッセージ表示
+	function validateForm() {
+		const container = document.getElementById('itemsContainer');
+		const itemRows = container.querySelectorAll('.item-row');
+
+		if (itemRows.length === 0) {
+			const errorDiv = document.getElementById('errorMessage');
+			if (errorDiv) {
+				errorDiv.textContent = "最低一つは食材を登録してください。";
+				errorDiv.style.color = "red";
+			} else {
+				alert("最低一つは食材を登録してください。");
+			}
+			return false; // 送信キャンセル
+		}
+		return true;
+	}
+</script>
+
+
+
+</html>

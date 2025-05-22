@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>買い物リスト</title>
+</head>
+
+<body>
+	<h1>買い物リスト</h1>
+	<table border="1">
+		<tr>
+			<th>食材名</th>
+			<th>量</th>
+			<th></th>
+		</tr>
+		<tr th:each="item : ${shoppingList}" th:id="'row-' + ${item.id}">
+			<td th:text="${item.foodName}"></td>
+			<td>
+				<input type="number" th:value="${item.quantity}" min="1"
+					th:onchange="'updateQuantity(' + ${item.id} + ', this)'" />
+			</td>
+			<td>
+				<button type="button" th:onclick="'deleteItem(' + ${item.id} + ')'">削除</button>
+			</td>
+		</tr>
+	</table>
+	<h3>買い物リストに手動追加</h3>
+	<input type="text" id="manualFoodName" placeholder="食材名">
+	<input type="number" id="manualQuantity" value="1" min="1">
+	<button onclick="addManualItem()">＋追加</button>
+	<br><br>
+</body>
+
+<script>
+	//量の変更
+	function updateQuantity(id, input) {
+		const quantity = input.value;
+		fetch('/shopping/update', {
+			method: 'POST',
+			headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+			body: `id=${id}&quantity=${quantity}`
+		});
+	}
+
+	//削除
+	function deleteItem(id) {
+		if (confirm('この食材を削除しますか？')) {
+			fetch('/shopping/delete', {
+				method: 'POST',
+				headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+				body: `id=${id}`
+			}).then(() => {
+				document.getElementById(`row-${id}`).remove();
+			});
+		}
+	}
+
+	//「食材を追加」
+	function addManualItem() {
+		const foodName = document.getElementById("manualFoodName").value;
+		const quantity = document.getElementById("manualQuantity").value;
+
+		if (!foodName || quantity < 1) {
+			alert("正しい食材名と数量を入力してください");
+			return;
+		}
+
+		fetch('/shopping/manualAdd', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded'
+			},
+			body: `foodName=${encodeURIComponent(foodName)}&quantity=${quantity}`
+		})
+			.then(response => {
+				if (response.ok) {
+					location.reload(); // 手動追加後にリスト更新（最初はこれでもOK）
+				} else {
+					alert("追加に失敗しました");
+				}
+			});
+	}
+</script>
+
+</html>

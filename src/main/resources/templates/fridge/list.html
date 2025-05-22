@@ -3,20 +3,21 @@
 
 <head>
 	<meta charset="UTF-8">
-	<link rel="stylesheet" type="text/css" href="listdesign.css" /> 
+	<link rel="stylesheet" type="text/css" href="listdesign.css" />
 	<title>冷蔵庫リスト</title>
 </head>
 
 <body>
-	<form th:action="@{/fridge/delete}" method="post" onsubmit="return confirm('選択したものをリストから削除しますか？')">
+	<form id="fridgeForm" method="post">
+		<input type="hidden" id="foodNamesInput" name="foodNames" />
 		<div style="margin-bottom: 10px;">
-			<button type="submit">選択したものを削除</button>
+			<button type="button" onclick="submitForm('delete')">選択したものを削除</button>
+			<button type="button" onclick="submitForm('shopping')">買い物リストに加える</button>
 		</div>
-		<table border=1>
-			<tr>
-				<!--削除チェックボックス用の行-->
-				<th></th>
 
+		<table border="1">
+			<tr>
+				<th></th>
 				<th>名前</th>
 				<th>量</th>
 				<th>カテゴリ</th>
@@ -25,25 +26,19 @@
 				<th>冷凍</th>
 			</tr>
 			<tr th:each="item : ${items}" th:classappend="${item.daysUntilExpiration <= 3} ? 'text-danger'">
-				<!-- チェックボックス（削除対象） -->
 				<td><input type="checkbox" name="selectedIds" th:value="${item.id}" /></td>
-				<!-- 食材名を編集リンクにしてある -->
 				<td><a th:href="@{/fridge/edit/{id}(id=${item.id})}" th:text="${item.name}"></a></td>
 				<td th:text="${item.quantity}"></td>
 				<td th:text="${item.category}"></td>
 				<td th:text="${item.purchaseDate}"></td>
-				<!-- 賞味期限が今日まで -->
-				<td th:if="${item.daysUntilExpiration == 0}" th:text="'今日まで！'" style="color: coral;">
-				</td>
-				<!-- 賞味期限が切れていないとき -->
-				<td th:if="${item.daysUntilExpiration > 0}" th:text="'あと' + ${item.daysUntilExpiration} + '日'">
-				</td>
-				<!-- 賞味期限が切れているとき -->
-				<td th:if="${item.daysUntilExpiration < 0}" th:text="'切れています'" style="color: red;">
-					<!-- 「冷凍」の項目は冷凍してるときだけ表示 -->
-				<td th:if="${item.frozen == true}" th:text="'冷凍済み'">
-				</td>
 
+				<!-- 賞味期限表示 -->
+				<td th:if="${item.daysUntilExpiration == 0}" th:text="'今日まで！'" style="color: coral;"></td>
+				<td th:if="${item.daysUntilExpiration > 0}" th:text="'あと' + ${item.daysUntilExpiration} + '日'"></td>
+				<td th:if="${item.daysUntilExpiration < 0}" th:text="'切れています'" style="color: red;"></td>
+
+				<!-- 冷凍表示 -->
+				<td th:if="${item.frozen == true}" th:text="'冷凍済み'"></td>
 			</tr>
 		</table>
 	</form>
@@ -53,15 +48,56 @@
 		<a th:href="@{/fridge/new}">＋ 新しい食材を追加</a>
 	</div>
 
+	<br><br>
+	<a th:href="@{/recipes/list}">献立一覧</a>
+
 	<!--追加したときのメッセージ表示-->
 	<div th:if="${addedmessage}" th:text="${addedmessage}" style="color: green;"></div>
-	
+
 	<!--更新したときのメッセージ表示-->
 	<div th:if="${changedmessage}" th:text="${changedmessage}" style="color: green;"></div>
-	
+
 	<!-- 削除したときのメッセージ表示-->
 	<div th:if="${deletedmessage}" th:text="${deletedmessage}" style="color: green;"></div>
 
 </body>
+
+<script>
+	//チェックボックスに対する動作(食材削除と買い物リスト追加)
+	function submitForm(actionType) {
+		const form = document.getElementById('fridgeForm');
+		const selected = Array.from(document.querySelectorAll('input[name="selectedIds"]:checked'));
+
+		if (selected.length === 0) {
+			alert("食材を選択してください。");
+			return;
+		}
+
+		// 送信先URLと確認メッセージ
+		let actionUrl = "";
+		let message = "";
+
+		if (actionType === 'delete') {
+			actionUrl = '/fridgeManager/fridge/delete';  
+			message = '選択したものをリストから削除しますか？';
+		} else if (actionType === 'shopping') {
+			actionUrl = '/fridgeManager/shopping/addFromFridge';
+			message = `選択したものを買い物リストに追加しますか？`;
+
+			// 食材名を取得して hidden に渡す
+			const selectedNames = selected.map(cb => {
+				const row = cb.closest('tr');
+				const name = row.querySelector('td:nth-child(2)').innerText;
+				return name.trim();
+			});
+			document.getElementById("foodNamesInput").value = selectedNames;
+		}
+
+		if (confirm(message)) {
+			form.action = actionUrl;
+			form.submit();
+		}
+	}
+</script>
 
 </html>

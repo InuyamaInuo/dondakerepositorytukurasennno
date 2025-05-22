@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>献立一覧</title>
+</head>
+
+<body>
+	<h1>献立一覧</h1>
+
+	<table border="1">
+		<tr>
+			<th>献立名</th>
+			<th>必要食材</th>
+			<th>量</th>
+			<th></th>
+		</tr>
+
+		<th:block th:each="info : ${recipeInfoList}">
+			<tr th:each="item, iterStat : ${info.recipe.items}">
+				<td th:if="${iterStat.index == 0}" th:rowspan="${#lists.size(info.recipe.items)}">
+					<a th:href="@{/recipes/edit/{id}(id=${info.recipe.recipeId})}"
+						th:text="${info.recipe.recipeName}"></a>
+					<p th:if="${info.canMake}" style="color: green;">今あるもので作れます！</p>
+				</td>
+				<td>
+					<span th:if="${item.foodName != null}" th:text="${item.foodName}"></span>
+					<span th:if="${item.foodName != null and info.shortageMap[item.foodName]}"
+						style="color: red;">（不足）</span>
+				</td>
+				<td th:text="${item.requiredQuantity}"></td>
+				<td th:if="${iterStat.index == 0}" th:rowspan="${#lists.size(info.recipe.items)}">
+					<form th:action="@{/recipes/delete/{id}(id=${info.recipe.recipeId})}" method="post"
+						th:attr="onsubmit=|return confirm('「${info.recipe.recipeName}」を削除しますか？')|">
+						<button type="submit">削除</button>
+					</form>
+				</td>
+			</tr>
+		</th:block>
+	</table>
+
+
+	<!-- 追加・更新・削除メッセージ -->
+	<div th:if="${addedmessage}" th:text="${addedmessage}" style="color: green;"></div>
+	<div th:if="${changedmessage}" th:text="${changedmessage}" style="color: green;"></div>
+	<div th:if="${deletedmessage}" th:text="${deletedmessage}" style="color: green;"></div>
+
+	<br>
+	<a th:href="@{/recipes/new}">新しい献立を追加</a><br><br>
+
+	<a th:href="@{/fridge/list}">冷蔵庫を見る</a>
+</body>
+
+</html>

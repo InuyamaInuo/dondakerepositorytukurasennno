@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -23,7 +22,6 @@ import jp.co.example.repository.FoodItemRepository;
 import jp.co.example.service.Shomikigen;
 
 @Controller
-@RequestMapping("/fridge")
 public class FridgeController {
 
 	@Autowired
@@ -32,21 +30,21 @@ public class FridgeController {
 	private FoodHistoryRepository foodHistoryRepository;
 
 	//リストを表示する
-	@GetMapping("/list")
+	@GetMapping("/fridge/list")
 	public String showList(Model model) {
 		model.addAttribute("items", fir.findAllByOrderByPurchaseDateDesc());
 		return "fridge/list";
 	}
 
 	//食材を追加するフォーム
-	@GetMapping("/new")
+	@GetMapping("/fridge/new")
 	public String showForm(Model model) {
 		model.addAttribute("foodItem", new FoodItem());
 		return "fridge/form";
 	}
 
 	//入力された食材情報をリストに載せる
-	@PostMapping("/save")
+	@PostMapping("/fridge/save")
 	public String save(@ModelAttribute FoodItem foodItem, RedirectAttributes redirectAttributes) {
 		if (foodItem.getPurchaseDate() == null) {
 			foodItem.setPurchaseDate(LocalDate.now());
@@ -79,6 +77,10 @@ public class FridgeController {
 	//その他カテの名前と賞味期限算出用
 	public String cate(FoodItem form) {
 		String finalCategory = form.getCategory();
+		// カスタムカテゴリが入力されていたら foodItem に反映
+	    if ("その他".equals(form.getCategory()) && form.getCustomCategory() != null && !form.getCustomCategory().isEmpty()) {
+	        form.setCategory(form.getCustomCategory());
+	    }
 		if ("その他".equals(finalCategory) && form.getCustomCategory() != null && !form.getCustomCategory().isEmpty()) {
 			finalCategory = form.getCustomCategory();
 		} else {
@@ -88,7 +90,7 @@ public class FridgeController {
 	}
 
 	//リストの食材を編集するフォーム
-	@GetMapping("/edit/{id}")
+	@GetMapping("/fridge/edit/{id}")
 	public String editFoodItem(@PathVariable Integer id, Model model) {
 		FoodItem item = fir.findById(id).orElseThrow();
 		model.addAttribute("foodItem", item);
@@ -96,7 +98,7 @@ public class FridgeController {
 	}
 
 	//更新した情報をリストに登録
-	@PostMapping("/update")
+	@PostMapping("/fridge/update")
 	public String updateFoodItem(@ModelAttribute FoodItem foodItem, RedirectAttributes redirectAttributes) {
 		if (foodItem.getPurchaseDate() == null) {
 			foodItem.setPurchaseDate(LocalDate.now());
@@ -117,7 +119,7 @@ public class FridgeController {
 	}
 
 	//選択したものを消す
-	@PostMapping("/delete")
+	@PostMapping("/fridge/delete")
 	public String deleteItems(@RequestParam("selectedIds") List<Integer> ids,
 			RedirectAttributes redirectAttributes) {
 		List<FoodItem> itemsToDelete = fir.findAllById(ids);

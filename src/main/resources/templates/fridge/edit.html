@@ -1,14 +1,19 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 
 <head>
-	<title>食材追加フォーム</title>
+	<meta charset="UTF-8">
+	<title>食材を編集</title>
 </head>
 
 <body>
-	<h1>食材を追加</h1>
 
-	<form th:action="@{/fridge/save}" th:object="${foodItem}" method="post">
+	<h1>食材を編集</h1>
+
+	<form th:action="@{/fridge/update}" th:object="${foodItem}" method="post">
+		<!-- ID(表示しない) -->
+		<input type="hidden" th:field="*{id}" />
+
 		<label>食材名：</label>
 		<input type="text" th:field="*{name}" required /><br />
 
@@ -25,9 +30,10 @@
 		<!-- その他カテゴリの入力欄（最初は非表示） -->
 		<div id="otherCategoryFields" style="display: none; margin-top: 10px;">
 			<label>カテゴリ名:</label>
-			<input type="text" name="customCategory" /><br />
+			<input type="text" th:field="*{customCategory}" /><br />
+
 			<label>賞味期限までの日数:</label>
-			<input type="number" name="customDaysToExpire" min="0" /><br />
+			<input type="number" name="customDaysToExpire" id="customDaysToExpire" min="0" disabled /><br />
 		</div>
 
 		<label>量：</label>
@@ -35,8 +41,7 @@
 		<span id="unit">g</span><br />
 
 		<label>購入日：</label>
-		<input type="date" th:field="*{purchaseDate}"
-			th:value="${#temporals.format(foodItem.purchaseDate, 'yyyy-MM-dd')}" /><br />
+		<input type="date" th:field="*{purchaseDate}" required /><br />
 
 		<label>冷凍：</label>
 		<input type="checkbox" th:field="*{frozen}" /><br />
@@ -45,8 +50,8 @@
 	</form>
 
 	<br><br>
-	<a th:href="@{list}">←一覧に戻る</a>
-
+	<a th:href="@{/fridge/list}">←一覧に戻る</a>
+	
 	<script>
 		function updateCategoryAndUnit() {
 			const category = document.getElementById("category").value;
@@ -63,8 +68,12 @@
 			// 「その他」が選ばれたら自由入力欄を表示
 			if (category === "その他") {
 				otherFields.style.display = "block";
+				document.getElementById("customDaysToExpire").disabled = false;
+				document.getElementsByName("customCategory")[0].disabled = false;
 			} else {
 				otherFields.style.display = "none";
+				document.getElementById("customDaysToExpire").disabled = true;
+				document.getElementsByName("customCategory")[0].disabled = true;
 			}
 		}
 
